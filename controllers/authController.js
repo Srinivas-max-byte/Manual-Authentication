@@ -310,7 +310,7 @@ exports.forgotPassword = (req, res) => {
 //------------ Redirect to Reset Handle ------------//
 exports.gotoReset = (req, res) => {
   const { token } = req.params;
-
+// Verify if the token is correct
   if (token) {
     jwt.verify(token, JWT_RESET_KEY, (err, decodedToken) => {
       if (err) {
