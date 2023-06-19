@@ -8,6 +8,14 @@ const jwt = require("jsonwebtoken");
 const JWT_KEY = "secretkey0025";
 const JWT_RESET_KEY = "resetkey0025";
 
+// ------------------Google Config----------------------------------//
+const config={
+  clientId: '753572344435-jo8nl5cfuoplh6cb44jk4r80eq5ne3jh.apps.googleusercontent.com',
+  clientSecret: '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',
+  refreshToken: '1//04vmSc2QiWaFrCgYIARAAGAQSNwF-L9IrBUxV9DF7dDsvkjh-Q9CfU08E3C-34qPeXovOhfiXw2hoBLL_tNPQUCq1sdLb-KoivV8',
+  redirectURL: 'https://developers.google.com/oauthplayground'
+}
+
 // ------------Creating a que for processing parallel jobs -----------//
 var jobsQueue = kue.createQueue();
 
@@ -57,15 +65,10 @@ exports.registerHandle = async (req, res) => {
         password2,
       });
     } else {
-    const oauth2Client = new OAuth2(
-      "753572344435-barkm30c6v30mn257nalm12inp9ee040.apps.googleusercontent.com", // ClientID
-      "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", // Client Secret
-      "https://developers.google.com/oauthplayground" // Redirect URL
-    );
+    const oauth2Client = new OAuth2(config.clientId, config.clientSecret, config.redirectURL);
 
     oauth2Client.setCredentials({
-      refresh_token:
-        "1//04HF6J3FYZjgPCgYIARAAGAQSNwF-L9IrsegmT1qnM3GxP6FyLUpc18Ttd9DWSg-Wi7pCMPn3MOKBi_Dk8OtGTBWL80j8d2wyeh8",
+      refresh_token: config.refreshToken
     });
     const accessToken = oauth2Client.getAccessToken();
 
@@ -85,11 +88,9 @@ exports.registerHandle = async (req, res) => {
         auth: {
           type: "OAuth2",
           user: "msrinivas0025@gmail.com",
-          clientId:
-            "753572344435-barkm30c6v30mn257nalm12inp9ee040.apps.googleusercontent.com",
-          clientSecret: "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",
-          refreshToken:
-            "1//04HF6J3FYZjgPCgYIARAAGAQSNwF-L9IrsegmT1qnM3GxP6FyLUpc18Ttd9DWSg-Wi7pCMPn3MOKBi_Dk8OtGTBWL80j8d2wyeh8",
+          clientId: config.clientId,
+          clientSecret: config.clientSecret,
+          refreshToken: config.refreshToken,
           accessToken: accessToken,
         },
       });
@@ -207,7 +208,7 @@ exports.forgotPassword = (req, res) => {
       email,
     });
   } else {
-    User.findOne({ email: email }).then((user) => {
+    User.findOne({ email: email }).then(async (user) => {
       if (!user) {
         //------------ User already exists ------------//
         errors.push({ msg: "User with Email ID does not exist!" });
@@ -216,18 +217,14 @@ exports.forgotPassword = (req, res) => {
           email,
         });
       } else {
-        const oauth2Client = new OAuth2(
-          "753572344435-barkm30c6v30mn257nalm12inp9ee040.apps.googleusercontent.com", // ClientID
-          "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", // Client Secret
-          "https://developers.google.com/oauthplayground" // Redirect URL
-        );
+        const oauth2Client = new OAuth2(config.clientId, config.clientSecret, config.redirectURL);
 
         oauth2Client.setCredentials({
-          refresh_token:
-            "1//04HF6J3FYZjgPCgYIARAAGAQSNwF-L9IrsegmT1qnM3GxP6FyLUpc18Ttd9DWSg-Wi7pCMPn3MOKBi_Dk8OtGTBWL80j8d2wyeh8",
+          refresh_token: config.refreshToken
         });
+        console.log('******************************************************************')
         const accessToken = oauth2Client.getAccessToken();
-
+        console.log(accessToken)
         const token = jwt.sign({ _id: user._id }, JWT_RESET_KEY, {
           expiresIn: "30m",
         });
@@ -251,11 +248,9 @@ exports.forgotPassword = (req, res) => {
               auth: {
                 type: "OAuth2",
                 user: "msrinivas0025@gmail.com",
-                clientId:
-                  "753572344435-barkm30c6v30mn257nalm12inp9ee040.apps.googleusercontent.com",
-                clientSecret: "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",
-                refreshToken:
-                  "1//04HF6J3FYZjgPCgYIARAAGAQSNwF-L9IrsegmT1qnM3GxP6FyLUpc18Ttd9DWSg-Wi7pCMPn3MOKBi_Dk8OtGTBWL80j8d2wyeh8",
+                clientId: config.clientId,
+                clientSecret: config.clientSecret,
+                refreshToken: config.refreshToken,
                 accessToken: accessToken,
               },
             });
@@ -303,8 +298,6 @@ exports.forgotPassword = (req, res) => {
     });
   }
 };
-
-
 
 
 //------------ Redirect to Reset Handle ------------//
