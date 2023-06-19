@@ -1,7 +1,7 @@
 const passport = require("passport");
 const bcryptjs = require("bcryptjs");
 const nodemailer = require("nodemailer");
-var kue = require('kue');
+// var kue = require('kue');
 const { google } = require("googleapis");
 const OAuth2 = google.auth.OAuth2;
 const jwt = require("jsonwebtoken");
@@ -17,7 +17,7 @@ const config={
 }
 
 // ------------Creating a que for processing parallel jobs -----------//
-var jobsQueue = kue.createQueue();
+// var jobsQueue = kue.createQueue();
 
 //------------ User Model ------------//
 const User = require("../models/User");
@@ -103,36 +103,54 @@ exports.registerHandle = async (req, res) => {
         generateTextFromHTML: true,
         html: output, // html body
       };
-      // creating new job queue.
-      let newJob = jobsQueue.create("emailRegistration", mailOptions).save(function (err) {
-            if (err) {
-              console.log("Error in sending to the queue", err);
-              return;
-            }
-            console.log("Job Enqueued", newJob.id);
-            }).priority('high');
-      // Processing the job queue request.
-      jobsQueue.process('emailRegistration', function(job, done){
-        console.log('Email worker is processing a job', job.data);
-        transporter.sendMail(job.data, (error, info) => {
-          if (error) {
-            console.log(error);
-            req.flash(
-              "error_msg",
-              "Something went wrong on our end. Please register again."
-            );
-            res.redirect("/auth/login");
-          } else {
-            console.log("Mail sent : %s", info.response);
-            req.flash(
-              "success_msg",
-              "Activation link sent to email ID. Please activate to log in."
-            );
-            res.redirect("/auth/login");
-          }
-        });
-        done();
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log(error);
+          req.flash(
+            "error_msg",
+            "Something went wrong on our end. Please register again."
+          );
+          res.redirect("/auth/login");
+        } else {
+          console.log("Mail sent : %s", info.response);
+          req.flash(
+            "success_msg",
+            "Activation link sent to email ID. Please activate to log in."
+          );
+          res.redirect("/auth/login");
+        }
       });
+      // creating new job queue.
+      // let newJob = jobsQueue.create("emailRegistration", mailOptions).save(function (err) {
+      //       if (err) {
+      //         console.log("Error in sending to the queue", err);
+      //         return;
+      //       }
+      //       console.log("Job Enqueued", newJob.id);
+      //       }).priority('high');
+      // Processing the job queue request.
+      // jobsQueue.process('emailRegistration', function(job, done){
+      //   console.log('Email worker is processing a job', job.data);
+      //   transporter.sendMail(job.data, (error, info) => {
+      //     if (error) {
+      //       console.log(error);
+      //       req.flash(
+      //         "error_msg",
+      //         "Something went wrong on our end. Please register again."
+      //       );
+      //       res.redirect("/auth/login");
+      //     } else {
+      //       console.log("Mail sent : %s", info.response);
+      //       req.flash(
+      //         "success_msg",
+      //         "Activation link sent to email ID. Please activate to log in."
+      //       );
+      //       res.redirect("/auth/login");
+      //     }
+      //   });
+      //   done();
+      // });
     }
   }
 };
@@ -262,36 +280,55 @@ exports.forgotPassword = (req, res) => {
               subject: "Account Password Reset: NodeJS Auth ✔", // Subject line
               html: output, // html body
             };
-            // Creating a new job queue
-            let newJob = jobsQueue.create("emailForgotPwd", mailOptions).save(function (err) {
-              if (err) {
-                console.log("Error in sending to the queue", err);
-                return;
+
+            transporter.sendMail(mailOptions, (error, info) => {
+              if (error) {
+                console.log(error);
+                req.flash(
+                  "error_msg",
+                  "Something went wrong on our end. Please try again later."
+                );
+                res.redirect("/auth/forgot");
+              } else {
+                console.log("Mail sent : %s", info.response);
+                req.flash(
+                  "success_msg",
+                  "Password reset link sent to email ID. Please follow the instructions."
+                );
+                res.redirect("/auth/login");
               }
-              console.log("Job Enqueued", newJob.id);
-            }).priority('high');
-            // Processing the new job request
-            jobsQueue.process('emailForgotPwd', function(job, done){
-              console.log('Email worker is processing a job', job.data);
-              transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                  console.log(error);
-                  req.flash(
-                    "error_msg",
-                    "Something went wrong on our end. Please try again later."
-                  );
-                  res.redirect("/auth/forgot");
-                } else {
-                  console.log("Mail sent : %s", info.response);
-                  req.flash(
-                    "success_msg",
-                    "Password reset link sent to email ID. Please follow the instructions."
-                  );
-                  res.redirect("/auth/login");
-                }
-              });
-              done();
             });
+
+            // Creating a new job queue
+            // let newJob = jobsQueue.create("emailForgotPwd", mailOptions).save(function (err) {
+            //   if (err) {
+            //     console.log("Error in sending to the queue", err);
+            //     return;
+            //   }
+            //   console.log("Job Enqueued", newJob.id);
+            // }).priority('high');
+            // Processing the new job request
+            // jobsQueue.process('emailForgotPwd', function(job, done){
+            //   console.log('Email worker is processing a job', job.data);
+            //   transporter.sendMail(mailOptions, (error, info) => {
+            //     if (error) {
+            //       console.log(error);
+            //       req.flash(
+            //         "error_msg",
+            //         "Something went wrong on our end. Please try again later."
+            //       );
+            //       res.redirect("/auth/forgot");
+            //     } else {
+            //       console.log("Mail sent : %s", info.response);
+            //       req.flash(
+            //         "success_msg",
+            //         "Password reset link sent to email ID. Please follow the instructions."
+            //       );
+            //       res.redirect("/auth/login");
+            //     }
+            //   });
+            //   done();
+            // });
           }
         });
       }
